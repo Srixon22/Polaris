@@ -15,6 +15,8 @@
     --pink: #e85b9f;
     --cyan: #38c6eb;
     --page-scale: 1;
+    
+    /* 动画时间参数 */
     --t0:         0.17s;
     --dur-chip:   0.62s;
     --dur-base:   0.80s;
@@ -37,77 +39,96 @@
     margin: 0;
     padding: 0;
     overflow: hidden;
+    background: #45c7e3;
   }
   body {
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
     min-height: 100vh;
     font-family: "Microsoft YaHei UI", "Microsoft YaHei", "Noto Sans SC", Arial, sans-serif;
-    background: #45c7e3;
-    position: relative;
   }
+
+  /* 【核心修复】统一的 16:9 虚拟画布超级容器
+    让所有元素（背景、内容、动画）全部基于这个 1920x1080 的框定位
+  */
+  .canvas-container {
+    position: absolute;
+    width: var(--page-w);
+    height: var(--page-h);
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%) scale(var(--page-scale));
+    transform-origin: center center;
+    overflow: hidden;
+    pointer-events: auto; /* 允许内部元素交互 */
+  }
+
+  /* 彩虹装饰背景：铺满画布 */
   .maiDecorationBg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  /* 中间的白卡片 
+    现在使用绝对定位，死死固定在 1920x1080 画布的正中央
+  */
+  .container {
     position: absolute;
     left: 50%;
     top: 50%;
-    width: var(--page-w);
-    height: var(--page-h);
-    overflow: hidden;
-    z-index: 0;
-    pointer-events: none;
-    transform: translate(-50%, -50%) scale(var(--page-scale));
-    transform-origin: center center;
-  }
-  .container {
-    position: relative;
+    transform: translate(-50%, -50%);
     text-align: center;
-    padding: 20px;
+    padding: 35px 50px;
     background: rgba(255, 255, 255, 0.95);
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    border-radius: 24px;
+    box-shadow: 0 15px 50px rgba(0,0,0,0.15);
     z-index: 2;
-    max-width: 90%;
-    width: 350px;
+    width: 550px; /* 放大卡片以适应 1920 画布 */
+  }
+  .container h1 {
+    font-size: 54px;
+    margin: 0 0 10px 0;
+    color: var(--blue);
   }
   .subtitle {
     color: #666;
     font-style: italic; 
-    margin-top: -10px; 
-    margin-bottom: 20px;
+    font-size: 24px;
+    margin-top: 0;
+    margin-bottom: 30px;
   }
   img {
     max-width: 100%;
     height: auto;
-    border-radius: 4px;
+    border-radius: 12px;
   }
+
+  /* 转场动画舞台：铺满画布，层级最高 */
   .stage {
     position: absolute;
-    left: 50%;
-    top: 50%;
-    width: var(--page-w);
-    height: var(--page-h);
+    inset: 0;
+    width: 100%;
+    height: 100%;
     z-index: 5;
     pointer-events: none;
-    transform: translate(-50%, -50%) scale(var(--page-scale));
-    transform-origin: center center;
-    display: flex;
-    align-items: center;
-    justify-content: center;
   }
   .stage > .frame {
     width: 100%;
     height: 100%;
     background: transparent;
-    overflow: hidden;
-    position: relative;
   }
   .stage svg {
     width: 100%;
     height: 100%;
     display: block;
   }
+
+  /* ===== 以下为原始 SVG 动画关键帧，保持不变 ===== */
   @keyframes chip-in {
     0%   { transform: rotate(-180deg) scale(4.50); opacity: 0;    }
     5%   { transform: rotate(-170deg) scale(4.30); opacity: 0.55; }
@@ -164,13 +185,6 @@
     55%  { transform: scale(1.90); opacity: 1;    }
     75%  { transform: scale(2.90); opacity: 0.55; }
     90%  { transform: scale(3.70); opacity: 0.15; }
-    100% { transform: scale(4.20); opacity: 0;    }
-  }
-  @keyframes bg-out-expand {
-    0%   { transform: scale(1.00); opacity: 1;    }
-    35%  { transform: scale(1.90); opacity: 1;    }
-    65%  { transform: scale(2.90); opacity: 0.55; }
-    85%  { transform: scale(3.70); opacity: 0.15; }
     100% { transform: scale(4.20); opacity: 0;    }
   }
   @keyframes expand-TL  {
@@ -277,96 +291,61 @@
 </head>
 <body>
 
-  <div class="maiDecorationBg" aria-hidden="true">
-    <div class="shines-layer">
-      <div class="shines">
-        <div class="shine diamond-pink"></div>
-        <div class="shine diamond-yellow"></div>
-        <div class="shine diamond-white"></div>
-        <div class="shine star-white"></div>
-        <div class="shine star-yellow-left"></div>
-        <div class="shine star-yellow-right"></div>
+  <div class="canvas-container">
+    
+    <div class="maiDecorationBg" aria-hidden="true">
+      <div class="shines-layer">
+        <div class="shines">
+          <div class="shine diamond-pink"></div>
+          <div class="shine diamond-yellow"></div>
+          <div class="shine diamond-white"></div>
+          <div class="shine star-white"></div>
+          <div class="shine star-yellow-left"></div>
+          <div class="shine star-yellow-right"></div>
+        </div>
+      </div>
+      <div class="background-layer">
+        <div class="pattern-layer"></div>
+        <div class="decoration-container">
+          <div class="auroras"><div class="aurora aurora-front"></div><div class="aurora aurora-back"></div></div>
+          <div class="clouds">
+            <div class="cloud front-left"></div><div class="cloud front-right"></div><div class="cloud front-center"></div>
+            <div class="cloud back-left"></div><div class="cloud back-right"></div><div class="cloud back-center"></div>
+          </div>
+          <div class="moon"></div>
+        </div>
+        <div class="shooting-stars">
+          <div class="shooting-star shooting-star1"><div class="shooting-star-inner"><div class="shooting-star-tail green"></div><div class="shooting-star-head green"></div></div></div>
+          <div class="shooting-star shooting-star2"><div class="shooting-star-inner"><div class="shooting-star-tail"></div><div class="shooting-star-head"></div></div></div>
+          <div class="shooting-star shooting-star3"><div class="shooting-star-inner"><div class="shooting-star-tail pink"></div><div class="shooting-star-head pink"></div></div></div>
+          <div class="shooting-star shooting-star4"><div class="shooting-star-inner"><div class="shooting-star-tail green"></div><div class="shooting-star-head green"></div></div></div>
+          <div class="shooting-star shooting-star5"><div class="shooting-star-inner"><div class="shooting-star-tail pink"></div><div class="shooting-star-head pink"></div></div></div>
+          <div class="shooting-star shooting-star6"><div class="shooting-star-inner"><div class="shooting-star-tail"></div><div class="shooting-star-head"></div></div></div>
+          <div class="shooting-star shooting-star7"><div class="shooting-star-inner"><div class="shooting-star-tail"></div><div class="shooting-star-head"></div></div></div>
+        </div>
+        <div class="rainbow"></div>
+        <div class="rainbow-bottom"></div>
       </div>
     </div>
-    <div class="background-layer">
-      <div class="pattern-layer"></div>
-      <div class="decoration-container">
-        <div class="auroras">
-          <div class="aurora aurora-front"></div>
-          <div class="aurora aurora-back"></div>
-        </div>
-        <div class="clouds">
-          <div class="cloud front-left"></div>
-          <div class="cloud front-right"></div>
-          <div class="cloud front-center"></div>
-          <div class="cloud back-left"></div>
-          <div class="cloud back-right"></div>
-          <div class="cloud back-center"></div>
-        </div>
-        <div class="moon"></div>
-      </div>
-      <div class="shooting-stars">
-        <div class="shooting-star shooting-star1">
-          <div class="shooting-star-inner">
-            <div class="shooting-star-tail green"></div>
-            <div class="shooting-star-head green"></div>
-          </div>
-        </div>
-        <div class="shooting-star shooting-star2">
-          <div class="shooting-star-inner">
-            <div class="shooting-star-tail"></div>
-            <div class="shooting-star-head"></div>
-          </div>
-        </div>
-        <div class="shooting-star shooting-star3">
-          <div class="shooting-star-inner">
-            <div class="shooting-star-tail pink"></div>
-            <div class="shooting-star-head pink"></div>
-          </div>
-        </div>
-        <div class="shooting-star shooting-star4">
-          <div class="shooting-star-inner">
-            <div class="shooting-star-tail green"></div>
-            <div class="shooting-star-head green"></div>
-          </div>
-        </div>
-        <div class="shooting-star shooting-star5">
-          <div class="shooting-star-inner">
-            <div class="shooting-star-tail pink"></div>
-            <div class="shooting-star-head pink"></div>
-          </div>
-        </div>
-        <div class="shooting-star shooting-star6">
-          <div class="shooting-star-inner">
-            <div class="shooting-star-tail"></div>
-            <div class="shooting-star-head"></div>
-          </div>
-        </div>
-        <div class="shooting-star shooting-star7">
-          <div class="shooting-star-inner">
-            <div class="shooting-star-tail"></div>
-            <div class="shooting-star-head"></div>
-          </div>
-        </div>
-      </div>
-      <div class="rainbow"></div>
-      <div class="rainbow-bottom"></div>
+
+    <div class="container">
+      <h1>POLaRiS</h1>
+      <p class="subtitle">Maximum Apparent Magnitude</p> 
+      <img src="gunmu.png" alt="看到这个请刷新网页直到图片显示">
     </div>
-  </div>
 
-  <div class="container">
-    <h1>POLaRiS</h1>
-    <p class="subtitle">Maximum Apparent Magnitude</p> 
-    <img src="gunmu.png" alt="看到这个请刷新网页直到图片显示">
-  </div>
+    <div class="stage">
+      <div class="frame" id="frame"></div>
+    </div>
 
-  <div class="stage">
-    <div class="frame" id="frame"></div>
   </div>
 
 <script>
   const frame = document.getElementById('frame');
 
+  /* 【核心修复】统一缩放公式
+    完美计算当前屏幕（无论是手机狭长屏还是电脑屏）放入 1920x1080 所需的缩放比 
+  */
   const fitPage = () => {
     const scale = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
     document.documentElement.style.setProperty("--page-scale", scale.toString());
