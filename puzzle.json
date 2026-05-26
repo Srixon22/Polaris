@@ -1,0 +1,7 @@
+{
+  "workflow": "celestial-navigation",
+  "target": {
+    "pointer": "alpha",
+    "constellation": "UMi"
+  }
+}
