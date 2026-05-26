@@ -262,20 +262,6 @@
     animation-duration: var(--dur-bg), var(--dur-exit-bg);
     animation-delay: var(--t0), var(--t-exit-bg);
   }
-  .controls-replay {
-    position: fixed;
-    top: 12px; right: 12px;
-    z-index: 10;
-  }
-  .controls-replay button {
-    padding: 6px 12px;
-    background: rgba(255,255,255,.9);
-    border: 1px solid #888;
-    border-radius: 4px;
-    cursor: pointer;
-    font: 13px/1 system-ui, sans-serif;
-  }
-  .controls-replay button:hover { background: #fff; }
 </style>
 </head>
 <body>
@@ -357,10 +343,6 @@
     </div>
   </div>
 
-  <div class="controls-replay">
-    <button id="btn-replay">重播</button>
-  </div>
-
   <div class="container">
     <h1>POLaRiS</h1>
     <p class="subtitle">Maximum Apparent Magnitude</p> 
@@ -409,17 +391,6 @@
       jitterSlides(frame);
     } catch (e) {}
   }
-
-  function replay() {
-    const svg = frame.querySelector('svg');
-    if (!svg) return;
-    const clone = svg.cloneNode(true);
-    svg.replaceWith(clone);
-    elevateChip(frame);
-    jitterSlides(frame);
-  }
-
-  document.getElementById('btn-replay').addEventListener('click', replay);
 
   loadSVG();
 </script>
