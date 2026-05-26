@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>POLaRiS</title>
 <link rel="stylesheet" href="assets/maimai-decoration-bg.css">
 <style>
@@ -31,16 +31,21 @@
   * {
     box-sizing: border-box;
   }
+  html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+  }
   body {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     min-height: 100vh;
-    margin: 0;
     font-family: "Microsoft YaHei UI", "Microsoft YaHei", "Noto Sans SC", Arial, sans-serif;
     background: #45c7e3;
-    overflow: hidden;
     position: relative;
   }
   .maiDecorationBg {
@@ -59,10 +64,12 @@
     position: relative;
     text-align: center;
     padding: 20px;
-    background: white;
+    background: rgba(255, 255, 255, 0.95);
     border-radius: 8px;
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     z-index: 2;
+    max-width: 90%;
+    width: 350px;
   }
   .subtitle {
     color: #666;
@@ -76,18 +83,22 @@
     border-radius: 4px;
   }
   .stage {
-    position: fixed;
-    inset: 0;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: var(--page-w);
+    height: var(--page-h);
+    z-index: 5;
+    pointer-events: none;
+    transform: translate(-50%, -50%) scale(var(--page-scale));
+    transform-origin: center center;
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 5;
-    pointer-events: none;
   }
   .stage > .frame {
-    aspect-ratio: 16 / 9;
-    width: min(100vw, calc(100vh * 16 / 9));
-    height: min(100vh, calc(100vw * 9 / 16));
+    width: 100%;
+    height: 100%;
     background: transparent;
     overflow: hidden;
     position: relative;
@@ -357,11 +368,12 @@
   const frame = document.getElementById('frame');
 
   const fitPage = () => {
-    const scale = Math.min(window.innerWidth / 1920, window.innerHeight / 1080, 1);
+    const scale = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
     document.documentElement.style.setProperty("--page-scale", scale.toString());
   };
   fitPage();
   window.addEventListener("resize", fitPage);
+  window.addEventListener("orientationchange", fitPage);
 
   function jitterSlides(root) {
     const all = root.querySelectorAll('#HOLD > use, #Slide > use');
