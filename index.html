@@ -1,48 +1,427 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>POLaRiS</title>
-    <style>
-        body {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            margin: 0;
-            font-family: sans-serif;
-            background-color: #f0f2f5;
-        }
-        .container {
-            text-align: center;
-            padding: 20px;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-
-        .subtitle {
-            color: #666;
-            font-style: italic; 
-            margin-top: -10px; 
-            margin-bottom: 20px;
-        }
-        img {
-            max-width: 100%;
-            height: auto;
-            border-radius: 4px;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>POLaRiS</title>
+<link rel="stylesheet" href="assets/maimai-decoration-bg.css">
+<style>
+  :root {
+    --page-w: 1920px;
+    --page-h: 1080px;
+    --ink: #2f4867;
+    --blue: #2e6094;
+    --muted: #5e7e9e;
+    --pink: #e85b9f;
+    --cyan: #38c6eb;
+    --page-scale: 1;
+    --t0:         0.17s;
+    --dur-chip:   0.62s;
+    --dur-base:   0.80s;
+    --dur-purple: 0.70s;
+    --dur-white:  0.68s;
+    --dur-bg:     0.75s;
+    --t-exit-chip:   1.62s;
+    --t-exit-base:   1.746s;
+    --t-exit-bg:     1.746s;
+    --dur-exit-chip: 0.42s;
+    --dur-exit-base: 0.294s;
+    --dur-exit-bg:   0.294s;
+  }
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    margin: 0;
+    font-family: "Microsoft YaHei UI", "Microsoft YaHei", "Noto Sans SC", Arial, sans-serif;
+    background: #45c7e3;
+    overflow: hidden;
+    position: relative;
+  }
+  .maiDecorationBg {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: var(--page-w);
+    height: var(--page-h);
+    overflow: hidden;
+    z-index: 0;
+    pointer-events: none;
+    transform: translate(-50%, -50%) scale(var(--page-scale));
+    transform-origin: center center;
+  }
+  .container {
+    position: relative;
+    text-align: center;
+    padding: 20px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    z-index: 2;
+  }
+  .subtitle {
+    color: #666;
+    font-style: italic; 
+    margin-top: -10px; 
+    margin-bottom: 20px;
+  }
+  img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 4px;
+  }
+  .stage {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 5;
+    pointer-events: none;
+  }
+  .stage > .frame {
+    aspect-ratio: 16 / 9;
+    width: min(100vw, calc(100vh * 16 / 9));
+    height: min(100vh, calc(100vw * 9 / 16));
+    background: transparent;
+    overflow: hidden;
+    position: relative;
+  }
+  .stage svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+  @keyframes chip-in {
+    0%   { transform: rotate(-180deg) scale(4.50); opacity: 0;    }
+    5%   { transform: rotate(-170deg) scale(4.30); opacity: 0.55; }
+    18%  { transform: rotate(-140deg) scale(3.60); opacity: 0.85; }
+    32%  { transform: rotate(-100deg) scale(2.50); opacity: 0.95; }
+    48%  { transform: rotate(-55deg)  scale(1.40); opacity: 1;    }
+    62%  { transform: rotate(-22deg)  scale(0.96); opacity: 1;    }
+    74%  { transform: rotate(-8deg)   scale(0.91); opacity: 1;    }
+    86%  { transform: rotate(-2deg)   scale(0.97); opacity: 1;    }
+    94%  { transform: rotate(0deg)    scale(1.015);opacity: 1;    }
+    100% { transform: rotate(0deg)    scale(1.00); opacity: 1;    }
+  }
+  @keyframes settle-TL {
+    0%   { transform: translate(-2400px, -1500px); }
+    100% { transform: translate(0, 0); }
+  }
+  @keyframes settle-BR {
+    0%   { transform: translate(2400px, 1500px); }
+    100% { transform: translate(0, 0); }
+  }
+  @keyframes converge-TL {
+    0%   { transform: translate(1920px,1080px) scale(1.06) translate(-1920px,-1080px) translate(-2400px, -1500px); animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1); }
+    65%  { transform: translate(1920px,1080px) scale(1.06) translate(-1920px,-1080px) translate(100px, 60px);     animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1); }
+    85%  { transform: translate(1920px,1080px) scale(1.06) translate(-1920px,-1080px) translate(-25px, -15px);    animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1); }
+    100% { transform: translate(1920px,1080px) scale(1.06) translate(-1920px,-1080px) translate(0, 0); }
+  }
+  @keyframes converge-BR {
+    0%   { transform: translate(1920px,1080px) scale(1.06) translate(-1920px,-1080px) translate(2400px, 1500px);  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1); }
+    65%  { transform: translate(1920px,1080px) scale(1.06) translate(-1920px,-1080px) translate(-100px, -60px);   animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1); }
+    85%  { transform: translate(1920px,1080px) scale(1.06) translate(-1920px,-1080px) translate(25px, 15px);      animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1); }
+    100% { transform: translate(1920px,1080px) scale(1.06) translate(-1920px,-1080px) translate(0, 0); }
+  }
+  @keyframes slide-TR-to-BL {
+    0%   { transform: translate(2400px, -2400px); opacity: 0; }
+    18%  { opacity: 1; }
+    100% { transform: translate(0, 0); opacity: 1; }
+  }
+  @keyframes slide-BL-to-TR {
+    0%   { transform: translate(-2400px, 2400px); opacity: 0; }
+    18%  { opacity: 1; }
+    100% { transform: translate(0, 0); opacity: 1; }
+  }
+  @keyframes chip-out {
+    0%   { transform: scale(1.00); opacity: 1;    }
+    30%  { transform: scale(0.82); opacity: 1;    }
+    50%  { transform: scale(2.20); opacity: 0.65; }
+    70%  { transform: scale(3.40); opacity: 0.30; }
+    85%  { transform: scale(4.20); opacity: 0.05; }
+    100% { transform: scale(4.60); opacity: 0;    }
+  }
+  @keyframes bg-out {
+    0%   { transform: scale(1.00); opacity: 1;    }
+    30%  { transform: scale(0.94); opacity: 1;    }
+    55%  { transform: scale(1.90); opacity: 1;    }
+    75%  { transform: scale(2.90); opacity: 0.55; }
+    90%  { transform: scale(3.70); opacity: 0.15; }
+    100% { transform: scale(4.20); opacity: 0;    }
+  }
+  @keyframes bg-out-expand {
+    0%   { transform: scale(1.00); opacity: 1;    }
+    35%  { transform: scale(1.90); opacity: 1;    }
+    65%  { transform: scale(2.90); opacity: 0.55; }
+    85%  { transform: scale(3.70); opacity: 0.15; }
+    100% { transform: scale(4.20); opacity: 0;    }
+  }
+  @keyframes expand-TL  {
+    0%   { transform: translate(0, 0);              opacity: 1;    }
+    70%  { transform: translate(-1680px,-1050px);    opacity: 0.55; }
+    100% { transform: translate(-2400px,-1500px);    opacity: 0;    }
+  }
+  @keyframes expand-BR  {
+    0%   { transform: translate(0, 0);              opacity: 1;    }
+    70%  { transform: translate( 1680px, 1050px);    opacity: 0.55; }
+    100% { transform: translate( 2400px, 1500px);    opacity: 0;    }
+  }
+  @keyframes converge-TL-out {
+    0%,100% { transform: translate(1920px,1080px) scale(1.06) translate(-1920px,-1080px); }
+  }
+  @keyframes converge-BR-out {
+    0%,100% { transform: translate(1920px,1080px) scale(1.06) translate(-1920px,-1080px); }
+  }
+  @keyframes slide-TR-to-BL-out {
+    from { transform: translate(0, 0);                opacity: 1; }
+    to   { transform: translate(-2200px, 2200px);     opacity: 0; }
+  }
+  @keyframes slide-BL-to-TR-out {
+    from { transform: translate(0, 0);                opacity: 1; }
+    to   { transform: translate( 2200px,-2200px);     opacity: 0; }
+  }
+  #两角淡紫, #两角白色 {
+    transform-box: view-box;
+    transform-origin: 50% 50%;
+    animation-name: bg-out;
+    animation-duration: var(--dur-exit-chip);
+    animation-timing-function: linear;
+    animation-delay: var(--t-exit-chip);
+    animation-fill-mode: forwards;
+  }
+  #滴拉熊 {
+    transform-box: view-box;
+    transform-origin: 50% 50%;
+    animation-name:            chip-in,                                chip-out;
+    animation-duration:        var(--dur-chip),                         var(--dur-exit-chip);
+    animation-timing-function: linear,                                  linear;
+    animation-delay:           calc(var(--t0) - 0.02s),                 var(--t-exit-chip);
+    animation-fill-mode:       both,                                    forwards;
+  }
+  #左上小方块, #左上底板 {
+    animation-name:            settle-TL,                               expand-TL;
+    animation-duration:        var(--dur-base),                         var(--dur-exit-base);
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1),          linear;
+    animation-delay:           var(--t0),                               var(--t-exit-base);
+    animation-fill-mode:       both,                                    forwards;
+  }
+  #右下小方块, #右下底板 {
+    animation-name:            settle-BR,                               expand-BR;
+    animation-duration:        var(--dur-base),                         var(--dur-exit-base);
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1),          linear;
+    animation-delay:           var(--t0),                               var(--t-exit-base);
+    animation-fill-mode:       both,                                    forwards;
+  }
+  #两角淡紫 > [id="左上"] {
+    animation-name:            converge-TL,                             converge-TL-out;
+    animation-duration:        var(--dur-purple),                       var(--dur-exit-base);
+    animation-timing-function: linear,                                  linear;
+    animation-delay:           var(--t0),                               var(--t-exit-base);
+    animation-fill-mode:       both,                                    forwards;
+  }
+  #两角淡紫 > [id="右下"] {
+    animation-name:            converge-BR,                             converge-BR-out;
+    animation-duration:        var(--dur-purple),                       var(--dur-exit-base);
+    animation-timing-function: linear,                                  linear;
+    animation-delay:           var(--t0),                               var(--t-exit-base);
+    animation-fill-mode:       both,                                    forwards;
+  }
+  #两角白色 > [id="左上"] {
+    animation-name:            converge-TL,                             converge-TL-out;
+    animation-duration:        var(--dur-white),                        var(--dur-exit-base);
+    animation-timing-function: linear,                                  linear;
+    animation-delay:           var(--t0),                               var(--t-exit-base);
+    animation-fill-mode:       both,                                    forwards;
+  }
+  #两角白色 > [id="右下"] {
+    animation-name:            converge-BR,                             converge-BR-out;
+    animation-duration:        var(--dur-white),                        var(--dur-exit-base);
+    animation-timing-function: linear,                                  linear;
+    animation-delay:           var(--t0),                               var(--t-exit-base);
+    animation-fill-mode:       both,                                    forwards;
+  }
+  #HOLD > use {
+    transform-box: fill-box;
+    animation-name: slide-TR-to-BL, slide-TR-to-BL-out;
+    animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1), cubic-bezier(0.55, 0, 1, 0.45);
+    animation-fill-mode: both, forwards;
+    animation-duration: var(--dur-bg), var(--dur-exit-bg);
+    animation-delay: var(--t0), var(--t-exit-bg);
+  }
+  #Slide > use {
+    transform-box: fill-box;
+    animation-name: slide-BL-to-TR, slide-BL-to-TR-out;
+    animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1), cubic-bezier(0.55, 0, 1, 0.45);
+    animation-fill-mode: both, forwards;
+    animation-duration: var(--dur-bg), var(--dur-exit-bg);
+    animation-delay: var(--t0), var(--t-exit-bg);
+  }
+  .controls-replay {
+    position: fixed;
+    top: 12px; right: 12px;
+    z-index: 10;
+  }
+  .controls-replay button {
+    padding: 6px 12px;
+    background: rgba(255,255,255,.9);
+    border: 1px solid #888;
+    border-radius: 4px;
+    cursor: pointer;
+    font: 13px/1 system-ui, sans-serif;
+  }
+  .controls-replay button:hover { background: #fff; }
+</style>
 </head>
 <body>
 
-    <div class="container">
-        <h1>POLaRiS</h1>
-        <p class="subtitle">Maximum Apparent Magnitude</p> 
-        <img src="gunmu.png" alt="看到这个请刷新网页直到图片显示">
+  <div class="maiDecorationBg" aria-hidden="true">
+    <div class="shines-layer">
+      <div class="shines">
+        <div class="shine diamond-pink"></div>
+        <div class="shine diamond-yellow"></div>
+        <div class="shine diamond-white"></div>
+        <div class="shine star-white"></div>
+        <div class="shine star-yellow-left"></div>
+        <div class="shine star-yellow-right"></div>
+      </div>
     </div>
+    <div class="background-layer">
+      <div class="pattern-layer"></div>
+      <div class="decoration-container">
+        <div class="auroras">
+          <div class="aurora aurora-front"></div>
+          <div class="aurora aurora-back"></div>
+        </div>
+        <div class="clouds">
+          <div class="cloud front-left"></div>
+          <div class="cloud front-right"></div>
+          <div class="cloud front-center"></div>
+          <div class="cloud back-left"></div>
+          <div class="cloud back-right"></div>
+          <div class="cloud back-center"></div>
+        </div>
+        <div class="moon"></div>
+      </div>
+      <div class="shooting-stars">
+        <div class="shooting-star shooting-star1">
+          <div class="shooting-star-inner">
+            <div class="shooting-star-tail green"></div>
+            <div class="shooting-star-head green"></div>
+          </div>
+        </div>
+        <div class="shooting-star shooting-star2">
+          <div class="shooting-star-inner">
+            <div class="shooting-star-tail"></div>
+            <div class="shooting-star-head"></div>
+          </div>
+        </div>
+        <div class="shooting-star shooting-star3">
+          <div class="shooting-star-inner">
+            <div class="shooting-star-tail pink"></div>
+            <div class="shooting-star-head pink"></div>
+          </div>
+        </div>
+        <div class="shooting-star shooting-star4">
+          <div class="shooting-star-inner">
+            <div class="shooting-star-tail green"></div>
+            <div class="shooting-star-head green"></div>
+          </div>
+        </div>
+        <div class="shooting-star shooting-star5">
+          <div class="shooting-star-inner">
+            <div class="shooting-star-tail pink"></div>
+            <div class="shooting-star-head pink"></div>
+          </div>
+        </div>
+        <div class="shooting-star shooting-star6">
+          <div class="shooting-star-inner">
+            <div class="shooting-star-tail"></div>
+            <div class="shooting-star-head"></div>
+          </div>
+        </div>
+        <div class="shooting-star shooting-star7">
+          <div class="shooting-star-inner">
+            <div class="shooting-star-tail"></div>
+            <div class="shooting-star-head"></div>
+          </div>
+        </div>
+      </div>
+      <div class="rainbow"></div>
+      <div class="rainbow-bottom"></div>
+    </div>
+  </div>
 
+  <div class="controls-replay">
+    <button id="btn-replay">重播</button>
+  </div>
+
+  <div class="container">
+    <h1>POLaRiS</h1>
+    <p class="subtitle">Maximum Apparent Magnitude</p> 
+    <img src="gunmu.png" alt="看到这个请刷新网页直到图片显示">
+  </div>
+
+  <div class="stage">
+    <div class="frame" id="frame"></div>
+  </div>
+
+<script>
+  const frame = document.getElementById('frame');
+
+  const fitPage = () => {
+    const scale = Math.min(window.innerWidth / 1920, window.innerHeight / 1080, 1);
+    document.documentElement.style.setProperty("--page-scale", scale.toString());
+  };
+  fitPage();
+  window.addEventListener("resize", fitPage);
+
+  function jitterSlides(root) {
+    const all = root.querySelectorAll('#HOLD > use, #Slide > use');
+    all.forEach(el => {
+      const durIn    = 0.55 + Math.random() * 0.25;
+      const delayIn  = 0.17 + Math.random() * 0.06;
+      const durOut   = 0.15 + Math.random() * 0.03;
+      const delayOut = 1.583 + Math.random() * 0.04;
+      el.style.animationDuration = `${durIn.toFixed(3)}s, ${durOut.toFixed(3)}s`;
+      el.style.animationDelay    = `${delayIn.toFixed(3)}s, ${delayOut.toFixed(3)}s`;
+    });
+  }
+
+  function elevateChip(root) {
+    const svg = root.querySelector('svg');
+    if (!svg) return;
+    const chip = svg.querySelector('#滴拉熊');
+    if (chip) svg.appendChild(chip);
+  }
+
+  async function loadSVG() {
+    try {
+      const res = await fetch('舞萌转场复刻_16比9.svg');
+      const text = await res.text();
+      frame.innerHTML = text;
+      elevateChip(frame);
+      jitterSlides(frame);
+    } catch (e) {}
+  }
+
+  function replay() {
+    const svg = frame.querySelector('svg');
+    if (!svg) return;
+    const clone = svg.cloneNode(true);
+    svg.replaceWith(clone);
+    elevateChip(frame);
+    jitterSlides(frame);
+  }
+
+  document.getElementById('btn-replay').addEventListener('click', replay);
+
+  loadSVG();
+</script>
 </body>
 </html>
